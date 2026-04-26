@@ -1,7 +1,11 @@
 name: Playwright Tests
 
 on:
-  deployment_status:   # fires automatically when any deployment completes
+  deployment_status:
+
+permissions:
+  deployments: write
+  contents: read
 
 jobs:
   # ── QA ──────────────────────────────────────────────────────
@@ -75,55 +79,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: report-stage-${{ github.event.deployment.sha }}
-          path: reports/stage/
-          retention-days: 14
-
-  # ── PROD ─────────────────────────────────────────────────────
-  test-prod:
-    name: Prod Smoke Tests
-    runs-on: ubuntu-latest
-    if: |
-      github.event.deployment_status.state == 'success' &&
-      github.event.deployment.environment == 'prod'
-    environment: prod
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.deployment.sha }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-
-      - name: Run Prod smoke tests
-        run: npx playwright test --grep @smoke
-        env:
-          TEST_ENV: prod
-          BASE_URL: ${{ secrets.PROD_BASE_URL }}
-
-      - name: Upload report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: report-prod-${{ github.event.deployment.sha }}
-          path: reports/prod/
-          retention-days: 30
-
-          name: Playwright Tests
-
-on:
-  deployment_status:
-
-permissions:          # ← ADD THIS TOO
-  deployments: write
-  contents: read
-
-jobs:
-  test-qa:
-    # ... rest of your jobs
+          path: repo
